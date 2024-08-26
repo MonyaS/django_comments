@@ -1,0 +1,7 @@
+django_gateway/venv/
+django_gateway/config.env
+.idea/
+front_end/django_comments_react/.gitignore
+frint_end/django_comments_react/node_modules
+django_gateway/launch.sh
+front_end/django_commnents_react/package-lock.json
