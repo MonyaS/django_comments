@@ -1,10 +1,16 @@
 import time
 import hashlib
 import os
+from typing import Tuple
 
 import jwt
+from channels.db import database_sync_to_async
 from django.db import models
 from django.db.models import Manager, QuerySet
+from django.contrib.auth.models import AnonymousUser
+
+from channels.db import database_sync_to_async
+from jwt import InvalidTokenError
 
 from api_gateway.models.universal_exeption import InternalException
 
@@ -31,8 +37,7 @@ class User(models.Model):
         self.password: str
         dict_usr = {
             'generate_time': str(time.time()),
-            'mailbox_address': self.mailbox_address,
-            'user_password': str(self.password)
+            'mailbox_address': self.mailbox_address
         }
         return jwt.encode(dict_usr, os.getenv("AUTH_TOKEN_KEY"), algorithm='HS256')
 
@@ -78,3 +83,13 @@ class User(models.Model):
             return user
         else:
             raise InternalException({"status": 0, "error": "Login or password incorrect."}, 401)
+
+    @classmethod
+    @database_sync_to_async
+    def get_user_from_jwt_token(cls, token) -> tuple[bool, AnonymousUser | "User"]:
+        try:
+            payload = jwt.decode(token, os.getenv("AUTH_TOKEN_KEY"), algorithms=["HS256"])
+            user = cls.objects.get(mailbox_address=payload['mailbox_address'])
+            return True, user
+        except (InvalidTokenError, User.DoesNotExist):
+            return False, AnonymousUser()

@@ -1,9 +1,12 @@
 import json
+from channels import exceptions
 from channels.generic.websocket import WebsocketConsumer
 
 
 class CommentsConsumer(WebsocketConsumer):
     def connect(self):
+        if not self.scope['accept_connection']:
+            raise exceptions.DenyConnection("Invalid token.")
         self.accept()
         self.send(text_data=json.dumps({
             'message': "Hellow world!!!!!!!!!!!"
