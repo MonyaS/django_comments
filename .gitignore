@@ -5,3 +5,8 @@ front_end/django_comments_react/.gitignore
 frint_end/django_comments_react/node_modules
 django_gateway/launch.sh
 front_end/django_commnents_react/package-lock.json
+*.pyc
+*migrations
+django_gateway/migrations.sh
+docker-compose.yaml
+django_gateway/create_superuser.sh

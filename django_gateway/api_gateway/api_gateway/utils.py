@@ -1,19 +1,21 @@
 from functools import wraps
 
 from django.http import JsonResponse
-
-from api_gateway.api_gateway.models.universal_exeption import InternalException
+from rest_framework import exceptions
+from api_gateway.models.universal_exeption import InternalException
 
 
 def exception_handler(func):
     @wraps(func)
-    def wrapper():
+    def wrapper(*args, **kwargs):
         try:
-            return func()
+            return func(*args, **kwargs)
         except TypeError:
             return JsonResponse({"status": 0, "error": "Some data is wrong."}, status=401)
         except KeyError:
             return JsonResponse({"status": 0, "error": "Some data is wrong."}, status=500)
+        except exceptions.ParseError:
+            return JsonResponse({"status": 0, "error": "Some data is wrong."}, status=401)
         except InternalException as err:
             return JsonResponse({"status": 0, "error": err.exception_data}, status=err.exception_code)
 

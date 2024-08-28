@@ -16,7 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.urls import re_path
+
+from api_gateway.controls.user_controls import log_in, register
+from api_gateway.ws_consumers import ChatConsumer
+
+websocket_urlpatterns = [
+    re_path(r'ws/comments/$', ChatConsumer.as_asgi()),
+]
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('api/admin/', admin.site.urls),
+    path("api/login/", log_in),
+    path("api/register/", register),
 ]
