@@ -20,9 +20,11 @@ from django.urls import path, re_path
 from api_gateway.controls.user_controls import log_in, register
 from api_gateway.ws_consumers import CommentsConsumer
 
+# Websocket endpoints
 websocket_urlpatterns = [
     re_path(r'ws/comments/', CommentsConsumer.as_asgi()),
 ]
+# Http endpoints
 urlpatterns = [
     path('api/admin/', admin.site.urls),
     path("api/login/", log_in),

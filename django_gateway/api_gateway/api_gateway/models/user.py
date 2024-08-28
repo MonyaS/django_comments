@@ -1,10 +1,9 @@
 import time
 import hashlib
 import os
-from typing import Tuple
+from typing import Union
 
 import jwt
-from channels.db import database_sync_to_async
 from django.db import models
 from django.db.models import Manager, QuerySet
 from django.contrib.auth.models import AnonymousUser
@@ -86,7 +85,11 @@ class User(models.Model):
 
     @classmethod
     @database_sync_to_async
-    def get_user_from_jwt_token(cls, token) -> tuple[bool, AnonymousUser | "User"]:
+    def get_user_from_jwt_token(cls, token: str) -> tuple[bool, Union[AnonymousUser, "User"]]:
+        """
+            Method to authorize user from their JWT token.
+            If user not found or their token invalid, returns AnonymousUser.
+        """
         try:
             payload = jwt.decode(token, os.getenv("AUTH_TOKEN_KEY"), algorithms=["HS256"])
             user = cls.objects.get(mailbox_address=payload['mailbox_address'])
