@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, re_path
 
-from api_gateway.controls.user_controls import log_in, register
+from api_gateway.controls.user_controls import log_in, register, refresh_token
 from api_gateway.ws_consumers import CommentsConsumer
 
 # Websocket endpoints
@@ -29,4 +29,5 @@ urlpatterns = [
     path('api/admin/', admin.site.urls),
     path("api/login/", log_in),
     path("api/register/", register),
+    path("api/refresh_token/", refresh_token),
 ]

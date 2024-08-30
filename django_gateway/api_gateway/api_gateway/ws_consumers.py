@@ -7,6 +7,7 @@ class CommentsConsumer(WebsocketConsumer):
     """
         Websocket consumer for comments.
     """
+
     def connect(self):
         """
             If user pass JWT authorization

@@ -28,17 +28,22 @@ class User(models.Model):
     username = models.TextField(max_length=32, unique=True)
     password = models.BinaryField()
 
-    def get_token(self) -> str:
+    def get_cookies_token(self) -> str:
         """
             Generate a JWT token for user authentication.
         """
-        self.mailbox_address: str
-        self.password: str
         dict_usr = {
             'generate_time': str(time.time()),
             'mailbox_address': self.mailbox_address
         }
-        return jwt.encode(dict_usr, os.getenv("AUTH_TOKEN_KEY"), algorithm='HS256')
+        return f"Bearer {jwt.encode(dict_usr, os.getenv('AUTH_TOKEN_KEY'), algorithm='HS256')}"
+
+    def get_ws_token(self) -> str:
+        dict_usr = {
+            'live_time': str(time.time() + 900),  # Token live for a 15 minutes
+            'mailbox_address': self.mailbox_address,
+        }
+        return f"Bearer {jwt.encode(dict_usr, os.getenv('WS_TOKEN_KEY'), algorithm='HS256')}"
 
     def check_password(self, user_password: str) -> bool:
         """
@@ -84,14 +89,29 @@ class User(models.Model):
             raise InternalException({"status": 0, "error": "Login or password incorrect."}, 401)
 
     @classmethod
-    @database_sync_to_async
-    def get_user_from_jwt_token(cls, token: str) -> tuple[bool, Union[AnonymousUser, "User"]]:
+    def get_user_from_auth_token(cls, token: str) -> tuple[bool, Union[AnonymousUser, "User"]]:
         """
             Method to authorize user from their JWT token.
             If user not found or their token invalid, returns AnonymousUser.
         """
         try:
             payload = jwt.decode(token, os.getenv("AUTH_TOKEN_KEY"), algorithms=["HS256"])
+            user = cls.objects.get(mailbox_address=payload['mailbox_address'])
+            return True, user
+        except (InvalidTokenError, User.DoesNotExist):
+            return False, AnonymousUser()
+
+    @classmethod
+    @database_sync_to_async
+    def get_user_from_ws_token(cls, token: str) -> tuple[bool, Union[AnonymousUser, "User"]]:
+        """
+            Method to authorize user from their JWT token.
+            If user not found or their token invalid, returns AnonymousUser.
+        """
+        try:
+            payload = jwt.decode(token, os.getenv("WS_TOKEN_KEY"), algorithms=["HS256"])
+            if float(payload.get("live_time", 0)) < time.time():
+                raise InvalidTokenError
             user = cls.objects.get(mailbox_address=payload['mailbox_address'])
             return True, user
         except (InvalidTokenError, User.DoesNotExist):

@@ -45,6 +45,6 @@ class JWTAuthMiddleware(BaseMiddleware):
             if auth_header.startswith('Bearer '):
                 # Check if token valid and if user with this toke exist
                 scope['accept_connection'], scope['user'] = \
-                    await User.get_user_from_jwt_token(auth_header.split(' ')[1])
+                    await User.get_user_from_ws_token(auth_header.split(' ')[1])
 
         return await super().__call__(scope, receive, send)
