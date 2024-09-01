@@ -24,8 +24,6 @@ def exception_handler(func):
         except exceptions.ParseError:
             return JsonResponse({"status": 0, "error": "Some data is wrong."}, status=401)
         except InternalException as err:
-            return JsonResponse({"status": 0, "error": err.exception_data}, status=err.exception_code)
+            return JsonResponse(err.args[0], status=err.args[1])
 
     return wrapper
-
-

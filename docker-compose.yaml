@@ -10,7 +10,6 @@ services:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_PASSWORD=${DB_USER_PASSWORD}
-      - POSTGRES_INITDB_ARGS='--encoding=UTF-8 --lc-collate=C --lc-ctype=C'
     ports:
       - '${POSTGRES_PORT}:5432'
     volumes:
@@ -20,16 +19,14 @@ services:
 
 
   python_app:
+    container_name: ${PROJECT_NAME}_gateway
     build:
-      context: ../
-      dockerfile: django_comments/django_gateway/Dockerfile
+      context: ./django_gateway/
     restart: always
     ports:
       - "8000:8000"
-    volumes:
-      - .:/app
     depends_on:
-      - db
+      - postgres
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
@@ -46,4 +43,7 @@ services:
 networks:
   local_network:
 
+
+volumes:
+  db-data:
 

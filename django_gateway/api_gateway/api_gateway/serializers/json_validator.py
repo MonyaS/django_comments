@@ -1,10 +1,9 @@
 import json
 import re
 
+from api_gateway.models import InternalException
 from django.core.handlers.wsgi import WSGIRequest
 from rest_framework.parsers import JSONParser
-
-from api_gateway.models import InternalException
 
 
 class JsonValidator:
@@ -71,7 +70,7 @@ class JsonValidator:
         return self._check_json(result)
 
     def validate_comment(self):
-        self.data = self.data.get("home_page", "/")
+        self.data["home_page"] = self.data.get("home_page", "/")
         validated_data = self._check_json(self.data)
 
         # All allowed HTML tegs

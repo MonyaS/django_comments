@@ -9,6 +9,6 @@ class InternalException(Exception):
     """
 
     def __int__(self, exception_data, exception_code):
-        self.exception_data: str = exception_data
+        self.exception_data = exception_data
         self.exception_code: int = exception_code
         super().__init__("InternalException")

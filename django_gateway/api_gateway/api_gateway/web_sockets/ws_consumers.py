@@ -1,10 +1,9 @@
 import json
 
+from api_gateway.models import User, InternalException
+from api_gateway.serializers.json_validator import JsonValidator
 from channels import exceptions
 from channels.generic.websocket import WebsocketConsumer
-
-from api_gateway.models import User
-from api_gateway.serializers.json_validator import JsonValidator
 
 
 class CommentsConsumer(WebsocketConsumer):
@@ -30,7 +29,12 @@ class CommentsConsumer(WebsocketConsumer):
     def receive(self, text_data):
         user_obj: User = self.scope["user"]
         data_json = json.loads(text_data)
-        data = JsonValidator(name="add_comment", dict_data=data_json).validate_comment()
+        try:
+            data = JsonValidator(name="add_comment", dict_data=data_json).validate_comment()
+        except InternalException as err:
+            self.send(str(err.args[0]))
+
+        self.send("Your data is right." + str(text_data))
         # TODO Check if user Captcha is valid
 
         # TODO After receiving a message from user need to send a message to message microservice with data:
