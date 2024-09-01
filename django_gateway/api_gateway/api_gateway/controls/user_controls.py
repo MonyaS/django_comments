@@ -1,13 +1,11 @@
-import time
-
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
 from api_gateway.models import User, InternalException
 from api_gateway.serializers.user_serializer import UserSerializer
-from api_gateway.utils import exception_handler
-from json_validator import JsonValidator
+from utils import exception_handler
+from api_gateway.serializers.json_validator import JsonValidator
 
 
 @require_http_methods(["POST"])
@@ -16,7 +14,7 @@ def log_in(request: WSGIRequest) -> JsonResponse:
     """
     User login handler.
     """
-    user_data = JsonValidator(request, "users_login").validate()
+    user_data = JsonValidator(name="users_login", request=request).validate()
     user = User.authorize(user_data.get("mailbox_address"), user_data.get("password"))
     response = JsonResponse({"status": 1}, headers={'authorization': user.get_ws_token()}, status=200)
     response.set_cookie(
@@ -36,7 +34,7 @@ def register(request: WSGIRequest) -> JsonResponse:
     """
     User registration handler.
     """
-    user_data = JsonValidator(request, "users_register").validate()
+    user_data = JsonValidator(name="users_register", request=request).validate()
     serializer = UserSerializer(data=user_data)
     if serializer.is_valid():
         user = serializer.save()

@@ -1,9 +1,10 @@
 import json
+import re
 
 from django.core.handlers.wsgi import WSGIRequest
+from rest_framework.parsers import JSONParser
 
 from api_gateway.models import InternalException
-from rest_framework.parsers import JSONParser
 
 
 class JsonValidator:
@@ -30,14 +31,16 @@ class JsonValidator:
     """
     validation_vocabulary = {
         "users_login": ["mailbox_address", "password"],
-        "users_register": ["mailbox_address", "password", "username"]
+        "users_register": ["mailbox_address", "password", "username"],
+        "add_comment": ["home_page", "captcha", "text"]
     }
 
-    def __init__(self, request: WSGIRequest, name: str):
+    def __init__(self, name: str, dict_data: dict = None, request: WSGIRequest = None):
         self.request: WSGIRequest = request
+        self.data: dict = dict_data
         self.name: str = name
 
-    def check_keys(self, result):
+    def _check_keys(self, result):
         missing_fields = []
         for required_key in self.validation_vocabulary[self.name]:
             value = result.get(required_key, "field doesn't exist")
@@ -46,6 +49,18 @@ class JsonValidator:
                 continue
         return missing_fields
 
+    def _check_json(self, json_data):
+        # Check if all needed keys is present in request body
+        missing_fields = self._check_keys(json_data)
+        if missing_fields:
+            raise InternalException({"status": 0, "error": f"Missing required fields: {', '.join(missing_fields)}"},
+                                    422)
+
+        # Recreate a dict with only needed fields
+        validated_dict = {item: json_data[item] for item in self.validation_vocabulary[self.name]}
+
+        return validated_dict
+
     def validate(self) -> dict:
         # Check and parse request body
         try:
@@ -53,13 +68,29 @@ class JsonValidator:
         except json.decoder.JSONDecodeError:
             raise InternalException({"status": 0, "error": "Some data is wrong."}, 422)
 
-        # Check if all needed keys is present in request body
-        missing_fields = self.check_keys(result)
-        if missing_fields:
-            raise InternalException({"status": 0, "error": f"Missing required fields: {', '.join(missing_fields)}"},
-                                    422)
+        return self._check_json(result)
 
-        # Recreate a dict with only needed fields
-        validated_dict = {item: result[item] for item in self.validation_vocabulary[self.name]}
+    def validate_comment(self):
+        self.data = self.data.get("home_page", "/")
+        validated_data = self._check_json(self.data)
 
-        return validated_dict
+        # All allowed HTML tegs
+        allowed_tags_pattern = r'''
+                (
+                    <a\s+href="[^"]*"\s+title="[^"]*">.*?</a> |
+                    <code>.*?</code> |
+                    <i>.*?</i> |
+                    <strong>.*?</strong>
+                )
+            '''
+        html_tags_pattern = r'<[^>]+>'
+
+        # Find all HTML tags in the text
+        all_tags = re.findall(html_tags_pattern, validated_data["text"])
+
+        # Validate each tag
+        for tag in all_tags:
+            if not re.match(allowed_tags_pattern, tag, re.VERBOSE):
+                raise InternalException({"status": 0, "error": "User text contains illegal tags."}, 422)
+
+        return validated_data

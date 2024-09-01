@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, re_path
 
 from api_gateway.controls.user_controls import log_in, register, refresh_token
-from api_gateway.ws_consumers import CommentsConsumer
+from api_gateway.web_sockets.ws_consumers import CommentsConsumer
 
 # Websocket endpoints
 websocket_urlpatterns = [
