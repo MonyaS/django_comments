@@ -1,0 +1,49 @@
+version: '3.9'
+
+services:
+
+  postgres:
+    image: postgres:15.6
+    restart: always
+    container_name: ${PROJECT_NAME}_postgres
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_PASSWORD=${DB_USER_PASSWORD}
+      - POSTGRES_INITDB_ARGS='--encoding=UTF-8 --lc-collate=C --lc-ctype=C'
+    ports:
+      - '${POSTGRES_PORT}:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data/
+    networks:
+      - local_network
+
+
+  python_app:
+    build:
+      context: ../
+      dockerfile: django_comments/django_gateway/Dockerfile
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_USER_PASSWORD=${DB_USER_PASSWORD}
+      - DB_HOST=${PROJECT_NAME}_postgres
+      - DB_PORT=5432
+      - SECRET_KEY=${SECRET_KEY}
+      - AUTH_TOKEN_KEY=${AUTH_TOKEN_KEY}
+      - WS_TOKEN_KEY=${WS_TOKEN_KEY}
+
+    networks:
+      - local_network
+
+networks:
+  local_network:
+
+

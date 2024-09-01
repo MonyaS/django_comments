@@ -8,5 +8,4 @@ front_end/django_commnents_react/package-lock.json
 *.pyc
 *migrations
 django_gateway/migrations.sh
-docker-compose.yaml
 django_gateway/create_superuser.sh
