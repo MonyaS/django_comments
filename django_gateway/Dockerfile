@@ -15,4 +15,5 @@ EXPOSE 8000
 
 CMD ["sh", "-c", "python api_gateway/manage.py makemigrations && \
                    python api_gateway/manage.py migrate && \
+				   python api_gateway/manage.py migrate api_gateway && \
                    python api_gateway/manage.py runserver 0.0.0.0:8000"]
