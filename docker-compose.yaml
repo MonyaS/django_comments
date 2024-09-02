@@ -23,6 +23,15 @@ services:
     build:
       context: ./django_gateway/
     restart: always
+    command:
+      - /bin/sh
+      - -c
+      - |
+        python api_gateway/manage.py makemigrations
+        python api_gateway/manage.py makemigrations api_gateway
+        python api_gateway/manage.py migrate
+        echo "WEB: Migrations process done ..."
+        python api_gateway/manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
     depends_on:

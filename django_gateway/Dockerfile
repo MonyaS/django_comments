@@ -1,19 +1,23 @@
 FROM python:3.10-slim
 
-# Install system dependencies
+# Set environment variables
+ENV PIP_DISABLE_PIP_VERSION_CHECK 1
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
 RUN apt-get update && \
     apt-get install -y libpq-dev gcc
 
-
+# Set work directory
+# Maine folder will be create with such name in docker container
 WORKDIR /api_gateway
+
+# Install dependencies
+RUN pip3 install --upgrade pip
+COPY /requirements.txt .
+RUN pip3 install -r requirements.txt
+
+# Copy project
 COPY . /api_gateway
 
-RUN pip install --no-cache-dir -r requirements.txt
-
-
 EXPOSE 8000
-
-CMD ["sh", "-c", "python api_gateway/manage.py makemigrations && \
-                   python api_gateway/manage.py migrate && \
-				   python api_gateway/manage.py migrate api_gateway && \
-                   python api_gateway/manage.py runserver 0.0.0.0:8000"]
