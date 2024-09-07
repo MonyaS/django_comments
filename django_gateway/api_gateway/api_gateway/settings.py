@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = Configure.SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["54.37.74.248"]
 
@@ -72,9 +72,12 @@ TEMPLATES = [
 ASGI_APPLICATION = 'api_gateway.asgi.application'
 
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
-    }
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(Configure.get_reddis_connection_string())],
+        },
+    },
 }
 WSGI_APPLICATION = 'api_gateway.wsgi.application'
 

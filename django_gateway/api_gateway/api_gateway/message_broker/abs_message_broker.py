@@ -16,14 +16,14 @@ class ABSMessageBroker(ABC, metaclass=MessageBrokerSingletonMeta):
     connection = None
 
     @abstractmethod
-    def connect(self):
+    async def connect(self):
         """
             Create a connection to message broker and write it to self.connection
         """
         pass
 
     @abstractmethod
-    def send(self, data, recipient):
+    async def send(self, data, recipient):
         """
             Method must get a data and send it to recipient, using self.connection
         """

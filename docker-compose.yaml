@@ -17,8 +17,27 @@ services:
     networks:
       - local_network
 
+  redis:
+    image: redis:7.4
+    restart: always
+    container_name: ${PROJECT_NAME}_redis
+    ports:
+      - '6379:6379'
+    command: redis-server --save 60 1 --loglevel warning --requirepass <PASSWORD>
+    volumes:
+      - ./data:/data
 
-  python_app:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: ${PROJECT_NAME}_rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=YOUR_USERNAME
+      - RABBITMQ_DEFAULT_PASS=YOUR_PASSWORD
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  django_gateway:
     container_name: ${PROJECT_NAME}_gateway
     build:
       context: ./django_gateway/

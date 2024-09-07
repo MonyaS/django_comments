@@ -1,17 +1,19 @@
 import json
 
+from api_gateway.message_broker import MessageBroker
 from api_gateway.models import User, InternalException
 from api_gateway.serializers.json_validator import JsonValidator
 from channels import exceptions
-from channels.generic.websocket import WebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.layers import get_channel_layer
 
 
-class CommentsConsumer(WebsocketConsumer):
+class CommentsConsumer(AsyncWebsocketConsumer):
     """
         Websocket consumer for comments.
     """
 
-    def connect(self):
+    async def connect(self):
         """
             If user pass JWT authorization
             self.scope['accept_connection'] will be True and Websocket accept a request,
@@ -19,27 +21,39 @@ class CommentsConsumer(WebsocketConsumer):
         """
         if not self.scope['accept_connection']:
             raise exceptions.DenyConnection("Invalid token.")
-        self.accept()
+
+        self.user_id = self.scope["user"].id
+        self.group_name = f"user_{self.user_id}"
+
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+
+        await self.accept()
         # TODO After success connet to WebSocket user must get a list of all added comments and a Captcha data
         #  for creating a new comment
 
-    def disconnect(self, close_code):
-        pass
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
-    def receive(self, text_data):
+    async def receive(self, text_data):
         user_obj: User = self.scope["user"]
         data_json = json.loads(text_data)
         try:
             data = JsonValidator(name="add_comment", dict_data=data_json).validate_comment()
         except InternalException as err:
-            self.send(str(err.args[0]))
+            await self.send(str(err.args[0]))
+            return
 
-        self.send("Your data is right." + str(text_data))
+        await self.send("Your data is right." + str(text_data))
         # TODO Check if user Captcha is valid
 
-        # TODO After receiving a message from user need to send a message to message microservice with data:
-        #   {"username": user_obj.username, "mailbox_address": user_obj.mailbox_address, "home_page":data["home_page"],
-        #   "text": data["text"}}
+        await MessageBroker().send(
+            {
+                "user_id": user_obj.id,
+                "username": user_obj.username,
+                "mailbox_address": user_obj.mailbox_address,
+                "home_page": data["home_page"],
+                "text": data["text"]
+            }, "comments")
 
         # TODO as an answer to any message from user, need to send a new Captcha
         #  from Captcha microservice for a new comment

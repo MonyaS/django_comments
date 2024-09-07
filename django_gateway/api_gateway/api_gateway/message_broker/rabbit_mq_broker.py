@@ -1,18 +1,35 @@
-import pika
+import json
 
+import aio_pika
+from django.utils import timezone
 from api_gateway.message_broker.abs_message_broker import ABSMessageBroker
 from config import Configure
 
 
 class MessageBroker(ABSMessageBroker):
-    def send(self, data, recipient):
-        pass
+    def __init__(self):
+        self.channel = None
 
-    def connect(self):
-        credentials = pika.PlainCredentials(Configure.RABBITMQ_USER, Configure.RABBITMQ_USER_PASSWORD)
-        parameters = pika.ConnectionParameters(Configure.RABBITMQ_HOST,
-                                               Configure.RABBITMQ_PORT,
-                                               '/',
-                                               credentials)
+    async def send(self, data: dict, recipient):
+        """
+            Send a message to chanel and add timestamp to message.
+        """
+        data["timestamp"] = timezone.now().timestamp()
+        await self.channel.default_exchange.publish(
+            aio_pika.Message(body=json.dumps(data).encode()),
+            routing_key=recipient
+        )
+        # TODO Need to send an additional message to logger or
+        #  configure a default router for duplication any message to logger service
 
-        self.connection = pika.BlockingConnection(parameters)
+    async def connect(self):
+        # Create a connection to RabbitMq
+
+        self.connection = await aio_pika.connect_robust(
+            url=Configure.RABBITMQ_HOST,
+            port=Configure.RABBITMQ_PORT,
+            login=Configure.RABBITMQ_USER,
+            password=Configure.RABBITMQ_USER_PASSWORD
+        )
+
+        self.channel = await self.connection.channel()
