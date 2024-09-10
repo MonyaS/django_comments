@@ -1,7 +1,7 @@
 import aio_pika
 import json
 from channels.layers import get_channel_layer
-from rabbit_mq_broker import MessageBroker
+from api_gateway.message_broker.rabbit_mq_broker import MessageBroker
 
 
 async def rabbitmq_consumer():

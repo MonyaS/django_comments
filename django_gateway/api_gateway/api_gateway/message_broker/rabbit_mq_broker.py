@@ -10,7 +10,7 @@ class MessageBroker(ABSMessageBroker):
     def __init__(self):
         self.channel = None
 
-    async def send(self, data: dict, recipient):
+    async def send(self, data: dict, recipient: str):
         """
             Send a message to chanel and add timestamp to message.
         """
@@ -24,10 +24,9 @@ class MessageBroker(ABSMessageBroker):
 
     async def connect(self):
         # Create a connection to RabbitMq
-
         self.connection = await aio_pika.connect_robust(
-            url=Configure.RABBITMQ_HOST,
-            port=Configure.RABBITMQ_PORT,
+            host=Configure.RABBITMQ_HOST,
+            port=int(Configure.RABBITMQ_PORT),
             login=Configure.RABBITMQ_USER,
             password=Configure.RABBITMQ_USER_PASSWORD
         )

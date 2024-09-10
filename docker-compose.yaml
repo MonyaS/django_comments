@@ -23,19 +23,23 @@ services:
     container_name: ${PROJECT_NAME}_redis
     ports:
       - '6379:6379'
-    command: redis-server --save 60 1 --loglevel warning --requirepass <PASSWORD>
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
     volumes:
-      - ./data:/data
+      - cache:/data
+    networks:
+      - local_network
 
   rabbitmq:
     image: rabbitmq:3.13-management
     container_name: ${PROJECT_NAME}_rabbitmq
     environment:
-      - RABBITMQ_DEFAULT_USER=YOUR_USERNAME
-      - RABBITMQ_DEFAULT_PASS=YOUR_PASSWORD
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_USER_PASSWORD}
     ports:
       - "5672:5672"
       - "15672:15672"
+    networks:
+      - local_network
 
   django_gateway:
     container_name: ${PROJECT_NAME}_gateway
@@ -55,6 +59,8 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
+      - rabbitmq
+      - redis
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
@@ -64,6 +70,13 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - AUTH_TOKEN_KEY=${AUTH_TOKEN_KEY}
       - WS_TOKEN_KEY=${WS_TOKEN_KEY}
+      - RABBITMQ_HOST=${PROJECT_NAME}_rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_USER_PASSWORD=${RABBITMQ_USER_PASSWORD}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_HOST=${PROJECT_NAME}_redis
+      - REDIS_PORT=6379
 
     networks:
       - local_network
@@ -74,4 +87,5 @@ networks:
 
 volumes:
   db-data:
-
+  cache:
+    driver: local

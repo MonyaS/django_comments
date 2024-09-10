@@ -1,6 +1,6 @@
 import json
 
-from api_gateway.message_broker import MessageBroker
+from api_gateway.message_broker.rabbit_mq_broker import MessageBroker
 from api_gateway.models import User, InternalException
 from api_gateway.serializers.json_validator import JsonValidator
 from channels import exceptions
@@ -32,7 +32,8 @@ class CommentsConsumer(AsyncWebsocketConsumer):
         #  for creating a new comment
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        if self.scope['accept_connection']:
+            await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive(self, text_data):
         user_obj: User = self.scope["user"]
@@ -46,7 +47,9 @@ class CommentsConsumer(AsyncWebsocketConsumer):
         await self.send("Your data is right." + str(text_data))
         # TODO Check if user Captcha is valid
 
-        await MessageBroker().send(
+        # Get a message broker object and send user data to comments microservice
+        self.broker = await MessageBroker()
+        await self.broker.send(
             {
                 "user_id": user_obj.id,
                 "username": user_obj.username,

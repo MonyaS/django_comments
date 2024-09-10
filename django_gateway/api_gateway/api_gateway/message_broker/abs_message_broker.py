@@ -1,14 +1,15 @@
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 
 
-class MessageBrokerSingletonMeta(type):
+class MessageBrokerSingletonMeta(ABCMeta):
     _instances = {}
 
-    def __call__(cls, *args, **kwargs):
+    async def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             instance = super().__call__(*args, **kwargs)
             cls._instances[cls] = instance
-            instance.connect()
+            # As connect is an async method, await it here
+            await instance.connect()
         return cls._instances[cls]
 
 
@@ -18,13 +19,13 @@ class ABSMessageBroker(ABC, metaclass=MessageBrokerSingletonMeta):
     @abstractmethod
     async def connect(self):
         """
-            Create a connection to message broker and write it to self.connection
+        Create a connection to message broker and write it to self.connection
         """
         pass
 
     @abstractmethod
-    async def send(self, data, recipient):
+    async def send(self, data: dict, recipient: str):
         """
-            Method must get a data and send it to recipient, using self.connection
+        Method must get a data and send it to recipient, using self.connection
         """
         pass

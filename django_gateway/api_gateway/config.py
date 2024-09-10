@@ -16,21 +16,20 @@ class Configure:
     DB_PORT = os.getenv("DB_PORT", "")
 
     # RabbitMQ credentials
-    RABBITMQ_USER = os.getenv("RABBITMQ_USER", "")
+    RABBITMQ_USER = os.getenv("RABBITMQ_USER")
     RABBITMQ_USER_PASSWORD = os.getenv("RABBITMQ_USER_PASSWORD", "")
     RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "")
     RABBITMQ_PORT = os.getenv("RABBITMQ_PORT", "")
 
-    # Reddis credentials
-    REDDIS_USER = os.getenv("REDDIS_USER", "")
-    REDDIS_USER_PASSWORD = os.getenv("REDDIS_USER_PASSWORD", "")
-    REDDIS_HOST = os.getenv("REDDIS_HOST", "")
-    REDDIS_PORT = os.getenv("REDDIS_PORT", "")
+    # Redis credentials
+    REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
+    REDIS_HOST = os.getenv("REDIS_HOST", "")
+    REDIS_PORT = os.getenv("REDIS_PORT", "")
 
     def validate(self):
         self._validate_db_credentials()
         self._validate_rabbit_credentials()
-        self._validate_reddis_credentials()
+        self._validate_redis_credentials()
 
     def _validate_db_credentials(self):
         # Db data validation patterns
@@ -63,7 +62,7 @@ class Configure:
             'RABBITMQ_USER': r'^\w+$',
             'RABBITMQ_USER_PASSWORD': r'^.{8,}$',
             'RABBITMQ_HOST': r'^[\w\.-]+$',
-            'DB_PORT': r'^\d+$'
+            'RABBITMQ_PORT': r'^\d+$'
         }
 
         if not re.match(patterns['RABBITMQ_USER'], self.RABBITMQ_USER):
@@ -78,28 +77,24 @@ class Configure:
         if not re.match(patterns['RABBITMQ_PORT'], self.RABBITMQ_PORT):
             raise KeyError("RabbitMQ port isn`t valid.")
 
-    def _validate_reddis_credentials(self):
-        # Reddis db data validation patterns
+    def _validate_redis_credentials(self):
+        # Redis db data validation patterns
         patterns = {
-            'REDDIS_USER': r'^\w+$',
-            'REDDIS_USER_PASSWORD': r'^.{8,}$',
-            'REDDIS_HOST': r'^[\w\.-]+$',
-            'REDDIS_PORT': r'^\d+$'
+            'REDIS_PASSWORD': r'^.{8,}$',
+            'REDIS_HOST': r'^[\w\.-]+$',
+            'REDIS_PORT': r'^\d+$'
         }
 
-        if not re.match(patterns['REDDIS_USER'], self.REDDIS_USER):
-            raise KeyError("Reddis username isn`t valid.")
+        if not re.match(patterns['REDIS_PASSWORD'], self.REDIS_PASSWORD):
+            raise KeyError("Redis password is too weak. Password must contain at least 8 characters.")
 
-        if not re.match(patterns['REDDIS_USER_PASSWORD'], self.REDDIS_USER_PASSWORD):
-            raise KeyError("Reddis password is too weak. Password must contain at least 8 characters.")
+        if not re.match(patterns['REDIS_HOST'], self.REDIS_HOST):
+            raise KeyError("Redis host isn`t valid.")
 
-        if not re.match(patterns['REDDIS_HOST'], self.REDDIS_HOST):
-            raise KeyError("Reddis host isn`t valid.")
-
-        if not re.match(patterns['REDDIS_PORT'], self.REDDIS_PORT):
-            raise KeyError("Reddis port isn`t valid.")
+        if not re.match(patterns['REDIS_PORT'], self.REDIS_PORT):
+            raise KeyError("Redis port isn`t valid.")
 
     @staticmethod
-    def get_reddis_connection_string():
-        return f"redis://{Configure.REDDIS_USER}:{Configure.REDDIS_USER_PASSWORD}@" \
-               f"{Configure.REDDIS_HOST}:{Configure.REDDIS_PORT}/0"
+    def get_redis_connection_string():
+        return f"redis://default:{Configure.REDIS_PASSWORD}@" \
+               f"{Configure.REDIS_HOST}:{Configure.REDIS_PORT}/0"

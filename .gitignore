@@ -9,4 +9,5 @@ front_end/django_commnents_react/package-lock.json
 *migrations
 django_gateway/migrations.sh
 django_gateway/create_superuser.sh
+django_gateway/launch.bat
 config.env

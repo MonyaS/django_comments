@@ -24,9 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = Configure.SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ["54.37.74.248"]
+ALLOWED_HOSTS = ["54.37.74.248", '127.0.0.1', "localhost"]
 
 # Application definition
 
@@ -75,7 +75,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(Configure.get_reddis_connection_string())],
+            "hosts": [(Configure.get_redis_connection_string())],
         },
     },
 }
