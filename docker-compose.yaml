@@ -17,6 +17,21 @@ services:
     networks:
       - local_network
 
+  comment_postgres:
+    image: postgres:15.6
+    restart: always
+    container_name: ${PROJECT_NAME}_comment_postgres
+    environment:
+      - POSTGRES_USER=${COMMENTS_DB_USER}
+      - POSTGRES_DB=${COMMENTS_DB_NAME}
+      - POSTGRES_PASSWORD=${COMMENTS_DB_USER_PASSWORD}
+    ports:
+      - '${COMMENTS_DB_PORT}:5432'
+    volumes:
+      - comment-data:/var/lib/postgresql/data/
+    networks:
+      - local_network
+
   redis:
     image: redis:7.4
     restart: always
@@ -41,6 +56,27 @@ services:
     networks:
       - local_network
 
+  comment_microservice:
+    container_name: ${PROJECT_NAME}_comment_microservice
+    build:
+      context: ./comments_service/
+    restart: always
+    depends_on:
+      - comment_postgres
+    environment:
+      - COMMENTS_DB_NAME=${COMMENTS_DB_NAME}
+      - COMMENTS_DB_USER=${COMMENTS_DB_USER}
+      - COMMENTS_DB_USER_PASSWORD=${COMMENTS_DB_USER_PASSWORD}
+      - COMMENTS_DB_HOST=${PROJECT_NAME}_comment_postgres
+      - DB_PORT=5432
+      - RABBITMQ_HOST=${PROJECT_NAME}_rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_USER_PASSWORD=${RABBITMQ_USER_PASSWORD}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    networks:
+      - local_network
+  
   django_gateway:
     container_name: ${PROJECT_NAME}_gateway
     build:
@@ -87,5 +123,6 @@ networks:
 
 volumes:
   db-data:
+  comment-data:
   cache:
     driver: local
