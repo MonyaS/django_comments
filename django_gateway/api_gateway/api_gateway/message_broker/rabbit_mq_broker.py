@@ -10,14 +10,22 @@ class MessageBroker(ABSMessageBroker):
     def __init__(self):
         self.channel = None
 
-    async def send(self, data: dict, recipient: str):
+    async def send(self, data: dict, recipient: str, method: str):
         """
             Send a message to chanel and add timestamp to message.
+            Input fields:
+                - data: dict body of message
+                - recipient: routing key of recipient queue
+                - method: additional information for consumer
         """
         data["timestamp"] = timezone.now().timestamp()
         await self.channel.default_exchange.publish(
-            aio_pika.Message(body=json.dumps(data).encode()),
-            routing_key=recipient
+            aio_pika.Message(body=json.dumps(data).encode(),
+                             headers={
+                                 "answer_key": "django_gateway",
+                                 "method": method
+                             }),
+            routing_key=recipient,
         )
         # TODO Need to send an additional message to logger or
         #  configure a default router for duplication any message to logger service

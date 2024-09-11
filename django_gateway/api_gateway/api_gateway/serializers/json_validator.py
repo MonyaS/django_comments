@@ -31,7 +31,7 @@ class JsonValidator:
     validation_vocabulary = {
         "users_login": ["mailbox_address", "password"],
         "users_register": ["mailbox_address", "password", "username"],
-        "add_comment": ["home_page", "captcha", "text"]
+        "add_comment": ["home_page", "captcha", "text", "parent_id"]
     }
 
     def __init__(self, name: str, dict_data: dict = None, request: WSGIRequest = None):

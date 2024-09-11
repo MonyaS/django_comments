@@ -55,8 +55,9 @@ class CommentsConsumer(AsyncWebsocketConsumer):
                 "username": user_obj.username,
                 "mailbox_address": user_obj.mailbox_address,
                 "home_page": data["home_page"],
-                "text": data["text"]
-            }, "comments")
+                "text": data["text"],
+                "parent_id": data["parent_id"]
+            }, "comments", "add")
 
         # TODO as an answer to any message from user, need to send a new Captcha
         #  from Captcha microservice for a new comment

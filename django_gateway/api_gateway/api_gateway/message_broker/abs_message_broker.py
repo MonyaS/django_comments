@@ -24,7 +24,7 @@ class ABSMessageBroker(ABC, metaclass=MessageBrokerSingletonMeta):
         pass
 
     @abstractmethod
-    async def send(self, data: dict, recipient: str):
+    async def send(self, data: dict, recipient: str, method: str):
         """
         Method must get a data and send it to recipient, using self.connection
         """
