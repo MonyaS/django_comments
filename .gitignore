@@ -1,4 +1,5 @@
 django_gateway/venv/
+comments_service/venv/
 django_gateway/config.env
 .idea/
 front_end/django_comments_react/.gitignore
@@ -11,3 +12,4 @@ django_gateway/migrations.sh
 django_gateway/create_superuser.sh
 django_gateway/launch.bat
 config.env
+comments_service/launch.sh

@@ -1,3 +1,4 @@
+from models.comment import Comment
 from models.universal_exeption import InternalException
 
 
@@ -33,3 +34,6 @@ class Message:
             raise InternalException("Unpronounceable method.", self.answer_key)
 
         self.answer_key = self.headers.get("answer_key")
+
+    def get_comment(self):
+        self.comment = Comment(**self.body)

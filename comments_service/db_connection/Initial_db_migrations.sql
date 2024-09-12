@@ -2,7 +2,7 @@ ALTER DATABASE {db_name} SET client_encoding TO 'UTF8';
 
 CREATE TABLE IF NOT EXISTS "comments"
 (
-    "id"        BIGINT,-- Uniq identifier of record.
+    "id"        BIGSERIAL,-- Uniq identifier of record.
     "user_id"   BIGINT, -- Internal user identifier in auth db.
 
     "parent_id" BIGINT NULL DEFAULT NULL, -- Id of parent record.
