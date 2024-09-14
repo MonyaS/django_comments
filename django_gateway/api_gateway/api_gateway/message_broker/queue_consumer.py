@@ -13,18 +13,17 @@ async def rabbitmq_consumer():
     queue = await channel.declare_queue("api_gateway", durable=True)
 
     async def process_message(message: aio_pika.IncomingMessage):
-        print(message)
         async with message.process():
             # Get data from incoming message
             user_group = message.headers.get("answer_user")
+            answer_type = message.headers.get("answer_type")
             response_message = json.loads(message.body)
-
             # Send the response to the correct WebSocket group using Redis
             channel_layer = get_channel_layer()
             await channel_layer.group_send(
                 user_group,
                 {
-                    "type": "send_response",
+                    "type": answer_type,
                     "response": response_message
                 }
             )

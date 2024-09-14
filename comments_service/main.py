@@ -8,8 +8,6 @@ from models.exeption_handler import exception_handler
 from models.message import Message
 
 
-
-
 # Function with incoming message processing logic
 @exception_handler
 def callback(_ch, _method, properties: BasicProperties, body):
@@ -32,11 +30,12 @@ def callback(_ch, _method, properties: BasicProperties, body):
                 comment_dict[parent_id]['children'].append(comment)
 
         broker_obj.send(data={"comments": tree_comments}, recipient=message_obj.answer_key,
-                        answer_user=message_obj.answer_user)
+                        answer_user=message_obj.answer_user, answer_type="get_comments")
     elif message_obj.method == "add":
         message_obj.get_comment()
-        DbConnection().add_comment_to_db(message_obj.comment)
-        broker_obj.send(data=message_obj.comment.__dict__, recipient=message_obj.answer_key, answer_user="all_users")
+        message_obj.comment.record_id = DbConnection().add_comment_to_db(message_obj.comment)
+        broker_obj.send(data=message_obj.comment.__dict__, recipient=message_obj.answer_key, answer_user="all_users",
+                        answer_type="add_comment")
     else:
         pass
 
