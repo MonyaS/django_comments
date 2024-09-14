@@ -116,3 +116,15 @@ class User(models.Model):
             return True, user
         except (InvalidTokenError, User.DoesNotExist):
             return False, AnonymousUser()
+
+    @classmethod
+    @database_sync_to_async
+    def get_user(cls, user_id: int) -> "User":
+        user = cls.filter_user(id=user_id).first()
+        return user
+
+    @classmethod
+    @database_sync_to_async
+    def get_users(cls, user_ids: set) -> list["User"]:
+        users = list(cls.filter_user(id__in=list(user_ids)))
+        return users
