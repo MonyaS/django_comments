@@ -53,13 +53,14 @@ class DbConnection(metaclass=DbConnectionSingletonMeta):
     @execution_sql
     def add_comment_to_db(self, comment: Comment):
         self.cursor.execute('''
-                INSERT INTO comments 
+                INSERT INTO "comments" 
                 (user_id,
                 parent_id,
                 home_page,
                 text
                 )
-                VALUES (%s,%s, %s, %s)''', (comment.user_id, comment.parent_id, comment.home_page, comment.text))
+                VALUES (%s,%s, %s, %s) RETURNING id''',
+                            (comment.user_id, comment.parent_id, comment.home_page, comment.text))
         # Fetch the inserted ID
         inserted_id = self.cursor.fetchone()[0]
         self.connection.commit()
@@ -70,7 +71,11 @@ class DbConnection(metaclass=DbConnectionSingletonMeta):
         results_data = list(self.cursor.fetchall())
         comments = []
         for comment in results_data:
-            user_id, parent_id, home_page, text = comment
-            comments.append(Comment(user_id=user_id, parent_id=parent_id, home_page=home_page, text=text))
+            record_id, user_id, parent_id, home_page, text = comment
+            comments.append(Comment(record_id=record_id,
+                                    user_id=user_id,
+                                    parent_id=parent_id,
+                                    home_page=home_page,
+                                    text=text))
 
         return comments

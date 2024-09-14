@@ -16,6 +16,7 @@ class Message:
         # Headers parameters
         self.method = None
         self.answer_key = None
+        self.answer_user = None
 
         # Comment object
         self.comment = None
@@ -28,12 +29,13 @@ class Message:
         """
         if not self.headers:
             raise InternalException("Headers isn`t valid.", self.answer_key)
-        self.method = self.headers.get("method")
+        self.method = self.headers.get("method").lower()
 
         if self.method not in self.AVAILABLE_METHODS:
             raise InternalException("Unpronounceable method.", self.answer_key)
 
         self.answer_key = self.headers.get("answer_key")
+        self.answer_user = self.headers.get("answer_user")
 
     def get_comment(self):
         self.comment = Comment(**self.body)

@@ -30,15 +30,18 @@ class MessageBroker:
         self.channel = self.connection.channel()
         self.queue = self.channel.queue_declare(queue='comments', durable=True)
 
-    def send(self, data: dict, recipient: str):
+    def send(self, data: dict, recipient: str, answer_user: ""):
         """
             Send a message to chanel and add timestamp to message.
             Input fields:
                 - data: dict body of message
                 - recipient: routing key of recipient queue
+                - answer_user: identifier of user that need to get an answer
         """
         timezone = pytz.timezone('Europe/Kiev')
         data["timestamp"] = datetime.now(timezone).replace(tzinfo=None, microsecond=0).timestamp()
+        headers = pika.BasicProperties(headers={'answer_user': answer_user})
         self.channel.basic_publish(exchange='',
                                    routing_key=recipient,
+                                   properties=headers,
                                    body=json.dumps(data).encode())

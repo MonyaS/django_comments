@@ -13,3 +13,4 @@ django_gateway/create_superuser.sh
 django_gateway/launch.bat
 config.env
 comments_service/launch.sh
+comments_service/launch.bat
