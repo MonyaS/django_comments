@@ -14,3 +14,4 @@ django_gateway/launch.bat
 config.env
 comments_service/launch.sh
 comments_service/launch.bat
+django_gateway/launch_broker.bat

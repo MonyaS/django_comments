@@ -1,5 +1,10 @@
 version: '3.9'
 
+x-django-service: &x-django-service
+  build:
+    context: ./comments_service/
+  restart: always
+
 services:
 
   postgres:
@@ -79,9 +84,7 @@ services:
   
   django_gateway:
     container_name: ${PROJECT_NAME}_gateway
-    build:
-      context: ./django_gateway/
-    restart: always
+    <<: *x-django-service
     command:
       - /bin/sh
       - -c

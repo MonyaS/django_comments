@@ -36,7 +36,7 @@ def callback(_ch, _method, properties: BasicProperties, body):
     elif message_obj.method == "add":
         message_obj.get_comment()
         DbConnection().add_comment_to_db(message_obj.comment)
-        broker_obj.send(data=message_obj.comment.__dict__, recipient=message_obj.answer_key, answer_user="all")
+        broker_obj.send(data=message_obj.comment.__dict__, recipient=message_obj.answer_key, answer_user="all_users")
     else:
         pass
 

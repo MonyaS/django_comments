@@ -33,7 +33,7 @@ def exception_handler(func):
             answer_key = request_headers.headers.get("answer_key")
             answer_user = request_headers.headers.get("answer_user")
             if answer_user and answer_key:
-                broker_obj.send(err.exception_data, recipient=answer_key, answer_user=answer_user)
+                broker_obj.send(err.args[0], recipient=answer_key, answer_user=answer_user)
             else:
                 pass
         except Exception as err:

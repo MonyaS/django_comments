@@ -10,7 +10,7 @@ class MessageBroker(ABSMessageBroker):
     def __init__(self):
         self.channel = None
 
-    async def send(self, data: dict, recipient: str, method: str):
+    async def send(self, data: dict, recipient: str, method: str, answer_user: str):
         """
             Send a message to chanel and add timestamp to message.
             Input fields:
@@ -22,7 +22,8 @@ class MessageBroker(ABSMessageBroker):
         await self.channel.default_exchange.publish(
             aio_pika.Message(body=json.dumps(data).encode(),
                              headers={
-                                 "answer_key": "django_gateway",
+                                 "answer_key": "api_gateway",
+                                 "answer_user": answer_user,
                                  "method": method
                              }),
             routing_key=recipient,
