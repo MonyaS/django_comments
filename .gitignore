@@ -1,4 +1,5 @@
 django_gateway/venv/
+captcha_service/venv/
 comments_service/venv/
 django_gateway/config.env
 .idea/
@@ -15,3 +16,5 @@ config.env
 comments_service/launch.sh
 comments_service/launch.bat
 django_gateway/launch_broker.bat
+captch_service/launch.bat
+captcha_service/launch.bat

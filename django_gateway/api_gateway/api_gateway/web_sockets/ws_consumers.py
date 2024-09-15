@@ -1,4 +1,6 @@
 import json
+import random
+import string
 
 from asgiref.sync import sync_to_async
 from django.db.models import QuerySet
@@ -26,8 +28,12 @@ class CommentsConsumer(AsyncWebsocketConsumer):
 
         self.group_name = f"user_{self.scope['user'].id}"
 
+        # Generate a random blocking captcha for the user, until the response from the captcha service is returned
+        self.captcha_key = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(25))
         self.broker = await MessageBroker()
         await self.broker.send({}, "comments", "get", self.group_name)
+
+        await self.broker.send({}, "captcha_service", "get", self.group_name)
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
 
@@ -52,7 +58,11 @@ class CommentsConsumer(AsyncWebsocketConsumer):
             await self.send(str(err.args[0]))
             return
 
-        # TODO Check if user Captcha is valid
+        # Check if user captcha is valid
+        if data["captcha"] != self.captcha_key:
+            await self.broker.send({}, "captcha_service", "get", self.group_name)
+            await self.send(json.dumps({"error": "Captcha isn`t valid, try again."}))
+            return
 
         # Get a message broker object and send user data to comments microservice
         await self.broker.send(
@@ -62,8 +72,8 @@ class CommentsConsumer(AsyncWebsocketConsumer):
                 "text": data["text"],
                 "parent_id": data["parent_id"] if data["parent_id"] else None
             }, "comments", "add", self.group_name)
-        # TODO as an answer to any message from user, need to send a new Captcha
-        #  from Captcha microservice for a new comment
+
+        await self.broker.send({}, "captcha_service", "get", self.group_name)
 
     # Handler for 'get_comments' message type from broker consumer
     async def get_comments(self, response):
@@ -97,7 +107,7 @@ class CommentsConsumer(AsyncWebsocketConsumer):
             get_comment_user(comment)
 
         # Send the response message back to the WebSocket client
-        await self.send(text_data=json.dumps(comments))
+        await self.send(text_data=json.dumps({"comments": comments}))
 
     # Handler for 'add_comment' message type from broker consumer
     async def add_comment(self, response):
@@ -109,3 +119,14 @@ class CommentsConsumer(AsyncWebsocketConsumer):
 
         # Send the response message back to the WebSocket client
         await self.send(text_data=json.dumps(response))
+
+    # Handler for 'get_captcha' message type from broker consumer
+    async def get_captcha(self, response):
+        captcha_data = response["response"]
+
+        # Extract captcha key
+        self.captcha_key = captcha_data.pop("key")
+
+        captcha_image = captcha_data['image']
+        # Send the response message back to the WebSocket client
+        await self.send(text_data=json.dumps({"image": captcha_image}))

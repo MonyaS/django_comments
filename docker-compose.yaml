@@ -2,7 +2,7 @@ version: '3.9'
 
 x-django-service: &x-django-service
   build:
-    context: ./comments_service/
+    context: ./django_gateway/
   restart: always
 
 services:
@@ -51,6 +51,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.13-management
+    restart: always
     container_name: ${PROJECT_NAME}_rabbitmq
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
@@ -68,12 +69,13 @@ services:
     restart: always
     depends_on:
       - comment_postgres
+      - rabbitmq
     environment:
       - COMMENTS_DB_NAME=${COMMENTS_DB_NAME}
       - COMMENTS_DB_USER=${COMMENTS_DB_USER}
       - COMMENTS_DB_USER_PASSWORD=${COMMENTS_DB_USER_PASSWORD}
       - COMMENTS_DB_HOST=${PROJECT_NAME}_comment_postgres
-      - DB_PORT=5432
+      - COMMENTS_DB_PORT=5432
       - RABBITMQ_HOST=${PROJECT_NAME}_rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER}
@@ -81,7 +83,55 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     networks:
       - local_network
-  
+
+  captcha_microservice:
+    container_name: ${PROJECT_NAME}_captcha_microservice
+    build:
+      context: ./captcha_service/
+    restart: always
+    depends_on:
+      - comment_postgres
+      - rabbitmq
+    environment:
+      - RABBITMQ_HOST=${PROJECT_NAME}_rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_USER_PASSWORD=${RABBITMQ_USER_PASSWORD}
+    networks:
+      - local_network
+
+  api_gateway_queue_consumer:
+    container_name: ${PROJECT_NAME}_gateway_queue_consumer
+    <<: *x-django-service
+    command:
+      - /bin/sh
+      - -c
+      - |
+        python api_gateway/manage.py run_broker_consume
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_USER_PASSWORD=${DB_USER_PASSWORD}
+      - DB_HOST=${PROJECT_NAME}_postgres
+      - DB_PORT=5432
+      - SECRET_KEY=${SECRET_KEY}
+      - AUTH_TOKEN_KEY=${AUTH_TOKEN_KEY}
+      - WS_TOKEN_KEY=${WS_TOKEN_KEY}
+      - RABBITMQ_HOST=${PROJECT_NAME}_rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_USER_PASSWORD=${RABBITMQ_USER_PASSWORD}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_HOST=${PROJECT_NAME}_redis
+      - REDIS_PORT=6379
+
+    networks:
+      - local_network
+
   django_gateway:
     container_name: ${PROJECT_NAME}_gateway
     <<: *x-django-service
@@ -100,6 +150,9 @@ services:
       - postgres
       - rabbitmq
       - redis
+      - comment_microservice
+      - captcha_microservice
+      - api_gateway_queue_consumer
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
