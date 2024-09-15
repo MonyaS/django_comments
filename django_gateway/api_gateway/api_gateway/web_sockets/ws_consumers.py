@@ -31,9 +31,6 @@ class CommentsConsumer(AsyncWebsocketConsumer):
         # Generate a random blocking captcha for the user, until the response from the captcha service is returned
         self.captcha_key = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(25))
         self.broker = await MessageBroker()
-        await self.broker.send({}, "comments", "get", self.group_name)
-
-        await self.broker.send({}, "captcha_service", "get", self.group_name)
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
 
@@ -41,9 +38,10 @@ class CommentsConsumer(AsyncWebsocketConsumer):
         self.common_group_name = "all_users"
         await self.channel_layer.group_add(self.common_group_name, self.channel_name)
 
+        await self.broker.send({}, "comments", "get", self.group_name)
+
+        await self.broker.send({}, "captcha_service", "get", self.group_name)
         await self.accept()
-        # TODO After success connet to WebSocket user must get a list of all added comments and a Captcha data
-        #  for creating a new comment
 
     async def disconnect(self, close_code):
         if self.scope['accept_connection']:
