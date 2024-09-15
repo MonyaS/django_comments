@@ -26,7 +26,11 @@ After copying the repository you need to create config.env file from config_exam
 
 To run this project, you will need to add the following environment variables to your .env file
 
+*Name that will be added to all containers, must be uniq*
+
 `PROJECT_NAME`
+
+*Credentials for API gateway service*
 
 `DB_NAME` Db username
 
@@ -35,6 +39,28 @@ To run this project, you will need to add the following environment variables to
 `DB_USER_PASSWORD`
 
 `POSTGRES_PORT`
+
+*Credentials for comment microservices*
+
+`COMMENTS_DB_NAME` 
+
+`COMMENTS_DB_USER`
+
+`COMMENTS_DB_USER_PASSWORD`
+
+`POSTGRES_PORT`
+
+*Credentials for RabbitMq message broker*
+
+`RABBITMQ_USER`
+
+`RABBITMQ_USER_PASSWORD`
+
+*Credentials for Redis Db*
+
+`REDIS_PASSWORD`
+
+*Secret encription keys*
 
 `SECRET_KEY`
 
@@ -45,7 +71,7 @@ To run this project, you will need to add the following environment variables to
 
 After creating config.env, you can start an application.
 ```bash
-  docker-compose --env-file config.env up  -d --force-recreate --build    
+  docker compose --env-file config.env up  -d --force-recreate --build    
 ```
 ## API Reference
 
@@ -92,8 +118,60 @@ After creating config.env, you can start an application.
 | :-------- | :------- | :-------------------------------- |
 | `Authorization`      | `string` | **Required**. Token from WebSocket token method. |
 
+
+## WS documentation
+
+### Incoming messages
+
+#### All exist comments
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `comments` | `list` | List of json formated exist comments. |
+
+
+##### Comments structure
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `record_id` | `list` | Internal id of record, use while addind a new comments as an answer. |
+| `user_id` | `list` | Internal id of user that left this comment. |
+| `parent_id` | `list` |  Internal id of the record to which this record is bound. |
+| `text` | `list` | Record text. |
+| `home_page` | `list` | Url whe this comment was left. |
+| `children` | `list` | List of json formated exist comments wich bound to this record. |
+| `mailbox_address` | `list` | Mailbox address of user that left this comment. |
+| `username` | `list` | Ssername of user that left this comment. |
+
+#### New comment (Some connected user add a new comment)
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `record_id` | `list` | Internal id of record, use while addind a new comments as an answer. |
+| `user_id` | `list` | Internal id of user that left this comment. |
+| `parent_id` | `list` |  Internal id of the record to which this record is bound. |
+| `text` | `list` | Record text. |
+| `home_page` | `list` | Url whe this comment was left. |
+| `children` | `list` | List of json formated exist comments wich bound to this record. |
+| `mailbox_address` | `list` | Mailbox address of user that left this comment. |
+| `username` | `list` | Ssername of user that left this comment. |
+
+#### User CAPTCHA
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `image` | `string` | CAPTCHA image in base64 encoding. |
+
+
+#### An error occurred
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `error` | `string` | Text of an error. |
+
+### Outgoing messages
+#### Create a new comment
+| Parameter | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `text` | `string` | **Required** Text of a new comment. |
+| `captcha` | `string` |**Required** Last CAPTCHA text. |
+| `parent_id` | `int` / `none` |  Text of an error. |
+
+
 ## Roadmap
-
-- Connect Pika for WS consumer and add RabbitMQ broker to docker compose file
-
-- Create microservices for Captcha, Comments saving, Logger
+- Create microservices for Logger and connet it to all microservices
